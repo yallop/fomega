@@ -1,0 +1,16 @@
+*~
+*.cmi
+*.cmo
+*.cma
+*.o
+*#
+lexer.ml
+parser.ml
+parser.mli
+parser.output
+parser.automaton
+parser.dot
+jsmain
+f
+f.exe
+f.js
