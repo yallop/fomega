@@ -6,8 +6,17 @@
 initial-scale=1.0">
 <script type="text/javascript" defer="defer" src="f.js"></script>
 <script>
-function runit() {
-    document.getElementById("output").value = fomega(document.getElementById("input").value);
+
+function interpret() {
+    var outbox = document.getElementById("output");
+    var inbox = document.getElementById("input");
+
+    outbox.value = fomega(inbox.value);
+    if(fomega_status === 0) {
+      output.style.backgroundColor='';
+    } else {
+      output.style.backgroundColor='pink';
+    }
 }
 </script>
 <title>System F&#969;</title>
@@ -19,7 +28,7 @@ function runit() {
 <textarea id="input" rows=40 cols=90></textarea>
 </p>
 <p align="center">
-<button type="button" onclick="runit()">Evaluate</button>
+<button type="button" onclick="interpret()">Evaluate</button>
 </p>
 <p align="center">
 <textarea id="output" rows=15 cols=90 readonly></textarea>

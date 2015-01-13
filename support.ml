@@ -26,8 +26,10 @@ let printInfo =
      with the string "Error:" *)
   function
     FI(f,l,c) ->
-      print_string f;
-      print_string ":";
+      if (String.length f <> 0) then begin
+        print_string f;
+        print_string ":";
+      end;
       print_int l; print_string ".";
       print_int c; print_string ":"
   | UNKNOWN ->
