@@ -2,8 +2,8 @@
 # Rules for compiling and linking the typechecker/evaluator
 #
 # Type
-#   make         to rebuild the executable file f
-#   make windows to rebuild the executable file f.exe
+#   make         to rebuild the executable file fomega
+#   make windows to rebuild the executable file fomega.exe
 #   make test    to rebuild the executable and run it on input file test.f
 #   make clean   to remove all intermediate and temporary files
 #   make depend  to rebuild the intermodule dependency graph that is used
@@ -29,24 +29,24 @@ JSFLAGS =
 
 # When "make" is invoked with no arguments, we build an executable
 # typechecker, after building everything that it depends on
-all: $(DEPEND) $(OBJS) f
+all: $(DEPEND) $(OBJS) fomega
 
-js: f.js
+js: fomega.js
 
 # On a Windows machine, we do exactly the same except that the executable
 # file that gets built needs to have the extension ".exe"
-windows: $(DEPEND) $(OBJS) f.exe
+windows: $(DEPEND) $(OBJS) fomega.exe
 
 # Include an automatically generated list of dependencies between source files
 include .depend
 
 # Build an executable typechecker
-f: $(OBJS) main.cmo
+fomega: $(OBJS) main.cmo
 	@echo Linking $@
 	ocamlc $(LINKFLAGS) -o $@ $^
 
 # Build an executable typechecker for Windows
-f.exe: $(OBJS) main.cmo
+fomega.exe: $(OBJS) main.cmo
 	@echo Linking $@
 	ocamlc $(LINKFLAGS) -o $@ $^
 
@@ -55,13 +55,13 @@ jsmain : $(OBJS) jsmain.ml
 	@echo Linking $@
 	ocamlfind ocamlc $(COMPILEFLAGS) -package js_of_ocaml -linkpkg -o $@ $^
 
-f.js: jsmain
+fomega.js: jsmain
 	@echo Compiling to JavaScript $@
 	js_of_ocaml $(JSFLAGS) -o $@ $<
 
 # Build and test
 test: all
-	./f test.f
+	./fomega test.f
 
 # Compile an ML module interface
 %.cmi : %.mli
@@ -87,7 +87,7 @@ parser.ml parser.mli: parser.mly
 clean::
 	rm -rf lexer.ml parser.ml parser.mli *.o *.cmo *.cmi parser.output \
            parser.automaton parser.conflicts parser.dot \
-	   f f.exe TAGS *~ *.bak jsmain f.js
+	   fomega fomega.exe TAGS *~ *.bak jsmain fomega.js
 
 # Rebuild intermodule dependencies
 depend:: $(DEPEND)

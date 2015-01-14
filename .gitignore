@@ -11,6 +11,6 @@ parser.output
 parser.automaton
 parser.dot
 jsmain
-f
-f.exe
-f.js
+fomega
+fomega.exe
+fomega.js
