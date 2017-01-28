@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,
-initial-scale=1.0">
-<script type="text/javascript" defer="defer" src="f.js"></script>
+	<head>
+	  <meta charset="utf-8">
+          <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+          <script type="text/javascript" defer="defer" src="f.js"></script>
+          <link rel="stylesheet" type="text/css" href="columns.css">
+          <title>Responsive Two Column Layout (Left Column Fluid)</title>
+          <meta name="viewport" content="width=device-width, initial-scale=1">
 <script>
 
 function interpret() {
@@ -19,18 +21,148 @@ function interpret() {
     }
 }
 </script>
-<title>System F&#969;</title>
-<body>
-<noscript>Sorry, you need to enable JavaScript to see this page.
-</noscript>
-<h1 align="center">System F&#969;</h1>
-<p align="center">
-<textarea id="input" rows=40 cols=90></textarea>
-</p>
-<p align="center">
-<button type="button" onclick="interpret()">Evaluate</button>
-</p>
-<p align="center">
+        </head>
+  <body>
+    <noscript>Sorry, you need to enable JavaScript to see this page.</noscript>
+    <h1 align="center">System F&#969;</h1>
+
+    <div class="columnsContainer">
+      <div class="leftColumn">
+        <textarea id="input" rows=40 cols=90>
+Pair = λA::*.λB::*.∀C::*.(A -> B -> C) -> C;
+
+pair = ΛA::*.ΛB::*.λx:A.λy:B.ΛC::*.λk:(A -> B -> C).k x y;
+
+fst = ΛA::*.ΛB::*.λp:Pair A B.p [A] (λx:A.λy:B.x);
+
+snd = ΛA::*.ΛB::*.λp:Pair A B.p [B] (λx:A.λy:B.y);
+        </textarea>
+        <p align="center"><button type="button" onclick="interpret()">Evaluate</button></p>
 <textarea id="output" rows=15 cols=90 readonly></textarea>
-</p>
+      </div>
+
+      <div class="rightColumn">
+	<h2>Syntax</h2>
+        <h4>Variables</h4>
+<b>Term variables</b>
+<pre>
+<code>
+a, b, c
+x, y, z
+</code>
+</pre>
+
+<b>Type variables</b>
+<pre>
+<code>
+A, B, C
+α, β, γ
+</pre>
+</code>
+
+<h4>Definitions</h4>
+
+<pre>
+<code>
+definition ::= α :: kind = type
+               x : type = term
+</pre>
+</code>
+
+Either signatures (<code> :: kind</code> or <code>: type</code>) and bodies (<code>= type</code> or <code>= term</code>) can be omitted (but not both).
+
+<h4>Kinds</h4>
+
+<pre>
+<code>
+kind ::= *
+         kind ⇒ kind
+         ( kind )
+</pre>
+</code>
+
+
+<h4>Types</h4>
+
+<pre>
+<code>
+type ::=
+  type → type
+  type × type
+  type + type
+  ∀ α :: kind . type
+  ∃ α :: kind . type
+  λ α :: kind . type
+  type type
+  ( type )
+</pre>
+</code>
+
+Kind annotations (<code>:: kind</code>) default to <code>*</code> if omitted.
+
+<h4>Terms</h4>
+
+<pre>
+<code>
+term ::=
+  λ x : type . term
+  term term
+  ⟨ term , term , ... term ⟩
+  @n term
+  inl [ type ] term
+  inr [ type ] term
+  case term of x.term | y . term
+  Λ α :: kind . term
+  term [ type ]
+  pack type , term, as ∃ α :: kind . type
+  open term as α , x in term
+  ( term )
+</pre>
+</code>
+             
+Kind annotations (<code>:: kind</code>) default to <code>*</code> if omitted.
+
+<h4>Alternative symbols</h4>
+
+<table>
+  <tr>
+    <td><code>lambda</code></td>
+    <td>for</td>
+    <td><code>λ</code></td>
+  </tr>
+  <tr>
+    <td><code>LAMBDA</code></td>
+    <td>for</td>
+    <td><code>Λ</code></td>
+  </tr>
+  <tr>
+    <td><code>=></code></td>
+    <td>for</td>
+    <td><code>⇒</code></td>
+  </tr>
+  <tr>
+    <td><code>-></code></td>
+    <td>for</td>
+    <td><code>→</code></td>
+  </tr>
+  <tr>
+    <td><code>*</code></td>
+    <td>for</td>
+    <td><code>×</code></td>
+  </tr>
+  <tr>
+    <td><code>All</code></td>
+    <td>for</td>
+    <td><code>∀</code></td>
+  </tr>
+  <tr>
+    <td><code>EXISTS</code></td>
+    <td>for</td>
+    <td><code>∃</code></td>
+  </tr>
+</table>
+	  	</div>
+
+  	</div>
+  </body>
 </html>
