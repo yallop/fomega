@@ -1,0 +1,25 @@
+*, *:before, *:after {
+  -moz-box-sizing: border-box; -webkit-box-sizing: border-box; box-sizing: border-box;
+}
+
+body { margin: 0; }
+
+.columnsContainer, footer, header { position: relative; margin: .5em; }
+
+.leftColumn, .rightColumn, footer, header {  border: 1px solid  #ccc; padding: 1.25em; }
+
+.leftColumn { margin-bottom: .5em; }
+
+/* MEDIA QUERIES */
+@media screen and (min-width: 40em ) {
+  .leftColumn { margin-right: 20em; }
+  .rightColumn { position: absolute; top: 0; right: 0; width: 20em; }   
+}
+
+textarea {
+    display: block;
+    width: 100%;
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+}
