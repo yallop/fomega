@@ -1,1 +1,1 @@
-bin: [ "fomega" ]
+bin: [ "src/fomega" ]
