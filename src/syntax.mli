@@ -32,6 +32,7 @@ type term =
   | TmProj of info * term * int
   | TmCase of info * term * string * term * string * term
   | TmInj of info * ty * inj * term
+  | TmMagic of info * ty * term
 
 type binding =
     NameBind
@@ -75,4 +76,3 @@ val prbinding : context -> binding -> unit
 
 (* Misc *)
 val tmInfo: term -> info
-

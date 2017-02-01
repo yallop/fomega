@@ -62,7 +62,7 @@ let whitespace = [' ' '	']
 let idchar =  ['A'-'Z' 'a'-'z' '_' '0'-'9' '\'']
 let lident = ['a'-'z' '_'] idchar*
 let uident = ['A'-'Z'] idchar*
-let lcgreek = 
+let lcgreek =
     "\206\177" (* α *)
   | "\206\178" (* β *)
   | "\206\179" (* γ *)
@@ -119,6 +119,7 @@ rule main = parse
 | "as"                              { Parser.AS (info lexbuf) }
 | "in"                              { Parser.IN (info lexbuf) }
 | "of"                              { Parser.OF (info lexbuf) }
+| "magic"                           { Parser.MAGIC (info lexbuf) }
 | "_"                               { Parser.USCORE (info lexbuf) }
 | "="                               { Parser.EQ (info lexbuf) }
 | ","                               { Parser.COMMA (info lexbuf) }
