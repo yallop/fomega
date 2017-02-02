@@ -79,12 +79,12 @@ let index2name fi ctx x =
     xn
   with Failure _ ->
     let msg =
-      Printf.sprintf "variable lookup failure: offset: %d, ctx size: %d" in
+      Printf.sprintf "Variable lookup failure: offset: %d, ctx size: %d" in
     error fi (msg x (List.length ctx))
 
 let rec name2index fi ctx x =
   match ctx with
-  | [] -> error fi ("identifier " ^ x ^ " is unbound")
+  | [] -> error fi ("Identifier " ^ x ^ " is unbound")
   | (y,_)::rest ->
       if y=x then 0
       else 1 + (name2index fi rest x)

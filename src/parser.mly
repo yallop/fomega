@@ -118,9 +118,9 @@ Command :
 (* Right-hand sides of top-level bindings *)
 Binder :
   | COLON Type
-      { fun ctx -> VarBind ($2 ctx)}
+      { fun ctx -> VarBind (($2 ctx).v)}
   | COLON Type EQ Term
-      { fun ctx -> VarDef($4 ctx, Some ($2 ctx))}
+      { fun ctx -> VarDef($4 ctx, Some (($2 ctx).v))}
   | EQ Term
       { fun ctx -> VarDef($2 ctx, None)}
 
@@ -134,41 +134,6 @@ ArrowKind :
   | AKind
            { $1 }
 
-(* All type expressions *)
-Type :
-    ArrowType
-                { $1 }
-  | ALL UCID OKind DOT Type
-      { fun ctx ->
-          let ctx1 = addname ctx $2.v in
-          TyAll($2.v,$3 ctx,$5 ctx1) }
-  | EXISTS UCID OKind DOT Type
-      { fun ctx ->
-          let ctx1 = addname ctx $2.v in
-          TyExi($2.v,$3 ctx,$5 ctx1) }
-  | LAMBDA UCID OKind DOT Type
-      { fun ctx ->
-          let ctx1 = addname ctx $2.v in
-          TyAbs($2.v, $3 ctx, $5 ctx1) }
-
-(* Atomic types are those that never need extra parentheses *)
-AType :
-    LPAREN Type RPAREN
-           { $2 }
-  | UCID
-      { fun ctx ->
-          TyVar(name2index $1.i ctx $1.v, ctxlength ctx) }
-
-TyBinder :
-  | (* empty *)
-      { fun ctx -> TyVarBind(KnStar) }
-  | COLONCOLON Kind
-      { fun ctx -> TyVarBind($2 ctx) }
-  | COLONCOLON Kind EQ Type
-      { fun ctx -> TyVarDef($4 ctx, Some ($2 ctx)) }
-  | EQ Type
-      { fun ctx -> TyVarDef($2 ctx, None) }
-
 AKind :
     STAR { fun ctx -> KnStar }
   | LPAREN Kind RPAREN  { $2 }
@@ -179,17 +144,53 @@ OKind :
 | COLONCOLON Kind
      { $2 }
 
+(* All type expressions *)
+Type :
+    ArrowType
+                { $1 }
+  | ALL UCID OKind DOT Type
+      { fun ctx ->
+          let ctx1 = addname ctx $2.v in
+          let ty = $5 ctx1 in
+          {i = merge $1 ty.i; v = TyAll($2.v,$3 ctx,ty.v)} }
+  | EXISTS UCID OKind DOT Type
+      { fun ctx ->
+          let ctx1 = addname ctx $2.v in
+          let ty = $5 ctx1 in
+          {i = merge $1 ty.i;
+           v = TyExi($2.v, $3 ctx, ty.v)} }
+  | LAMBDA UCID OKind DOT Type
+      { fun ctx ->
+          let ctx1 = addname ctx $2.v in
+          let ty = $5 ctx1 in
+          {i = merge $1 ty.i;
+           v = TyAbs($2.v, $3 ctx, ty.v)} }
+
+(* Atomic types are those that never need extra parentheses *)
+AType :
+    LPAREN Type RPAREN
+           { $2 }
+  | UCID
+      { fun ctx ->
+          {i = $1.i; v = TyVar(name2index $1.i ctx $1.v, ctxlength ctx)} }
+
 (* An "arrow type" is a sequence of product types separated by
    arrows. *)
 ArrowType :
     SumType ARROW ArrowType
-     { fun ctx -> TyArr($1 ctx, $3 ctx) }
+            { fun ctx ->
+              let ty = $1 ctx in
+              let ty' = $3 ctx in
+              {i = merge ty.i ty'.i; v = TyArr(ty.v, ty'.v)} }
   | SumType
             { $1 }
 
 SumType :
     ProdType PLUS SumType
-     { fun ctx -> TySum($1 ctx, $3 ctx) }
+     { fun ctx ->
+       let ty = $1 ctx in
+       let ty' = $3 ctx in
+       {i = merge ty.i ty'.i; v = TySum(ty.v, ty'.v)} }
   | ProdType
      { $1 }
 
@@ -197,15 +198,42 @@ SumType :
    times symbols. *)
 ProdType :
     Product
-     { fun ctx -> TyProd(List.map (fun f -> f ctx) $1) }
+      { fun ctx ->
+        let (ty, tys) = $1 in
+        let ty = ty ctx in
+        let {i; v} = List.fold_right
+          (fun ty' r ->
+            let ty' = ty' ctx in
+            {i = merge r.i ty'.i; v = ty'.v :: r.v})
+          tys
+          {i = ty.i; v = []} in
+      {i; v = TyProd (ty.v :: v)}}
   | AppType
      { $1 }
 
 Product :
     AppType TIMES Product
-      { $1 :: $3 }
+      { let (ty, tys) = $3 in
+        $1, ty :: tys }
   | AppType TIMES AppType
-      { [$1; $3] }
+      { $1, [$3] }
+
+AppType :
+    AppType AType { fun ctx ->
+                    let ty = $1 ctx in
+                    let ty' = $2 ctx in
+                    {i = merge ty.i ty'.i; v = TyApp(ty.v, ty'.v)} }
+  | AType { $1 }
+
+TyBinder :
+  | (* empty *)
+      { fun ctx -> TyVarBind(KnStar) }
+  | COLONCOLON Kind
+      { fun ctx -> TyVarBind($2 ctx) }
+  | COLONCOLON Kind EQ Type
+      { fun ctx -> TyVarDef(($4 ctx).v, Some ($2 ctx)) }
+  | EQ Type
+      { fun ctx -> TyVarDef(($2 ctx).v, None) }
 
 Term :
     AppTerm
@@ -213,29 +241,35 @@ Term :
   | LAMBDA LCID COLON Type DOT Term
       { fun ctx ->
           let ctx1 = addname ctx $2.v in
-          TmAbs($1, $2.v, $4 ctx, $6 ctx1) }
+          let t = $6 ctx1 in
+          TmAbs(merge $1 (tmInfo t), $2.v, ($4 ctx).v, t) }
   | CASE Term OF LCID DOT Term VBAR LCID DOT Term
       { fun ctx ->
           let ctx1 = addname ctx $4.v
           and ctx2 = addname ctx $8.v in
-          TmCase($1, $2 ctx, $4.v, $6 ctx1, $8.v, $10 ctx2) }
+          let t = $10 ctx2 in
+          TmCase(merge $1 (tmInfo t), $2 ctx, $4.v, $6 ctx1, $8.v, t) }
   | LAMBDA USCORE COLON Type DOT Term
       { fun ctx ->
           let ctx1 = addname ctx "_" in
-          TmAbs($1, "_", $4 ctx, $6 ctx1) }
+          let t = $6 ctx1 in
+          TmAbs(merge $1 (tmInfo t), "_", ($4 ctx).v, t) }
   | BIGLAMBDA UCID OKind DOT Term
       { fun ctx ->
           let ctx1 = addname ctx $2.v in
-          TmTAbs($1,$2.v,$3 ctx,$5 ctx1) }
+          let t = $5 ctx1 in
+          TmTAbs(merge $1 (tmInfo t),$2.v,$3 ctx,t) }
   | PACK Type COMMA Term AS EXISTS UCID OKind DOT Type
       { fun ctx ->
           let ctx1 = addname ctx $7.v in
-          TmPac($1,$2 ctx,$4 ctx,$7.v,$8 ctx,$10 ctx1) }
+          let t = $10 ctx1 in
+          TmPac(merge $1 t.i, ($2 ctx).v, $4 ctx, $7.v, $8 ctx, t.v) }
   | OPEN Term AS UCID COMMA LCID IN Term
       { fun ctx ->
           let ctx1 = addname ctx $4.v in
           let ctx2 = addname ctx1 $6.v in
-          TmOpe($1,$2 ctx,$4.v,$6.v,$8 ctx2) }
+          let t = $8 ctx2 in
+          TmOpe(merge $1 (tmInfo t), $2 ctx, $4.v, $6.v, t) }
 
 (* A sequence of terms seperated by commas. *)
 TermList:
@@ -249,44 +283,44 @@ AppTerm :
       { $1 }
   | AppTerm ATerm
       { fun ctx ->
-          let e1 = $1 ctx in
-          let e2 = $2 ctx in
-          TmApp(tmInfo e1,e1,e2) }
+        let e1 = $1 ctx in
+        let e2 = $2 ctx in
+        TmApp(merge (tmInfo e1) (tmInfo e2), e1, e2) }
   | AppTerm LSQUARE Type RSQUARE
       { fun ctx ->
-          let t1 = $1 ctx in
-          let t2 = $3 ctx in
-          TmTApp(tmInfo t1,t1,t2) }
+        let t1 = $1 ctx in
+        let t2 = $3 ctx in
+        TmTApp(merge (tmInfo t1) $4, t1, t2.v) }
   | AT INDEX ATerm
       { fun ctx ->
-          TmProj($1, $3 ctx, $2.v) }
+        let t = $3 ctx in
+        TmProj(merge $1 (tmInfo t), t, $2.v) }
   | PI SUBINDEX ATerm
       { fun ctx ->
-          TmProj($1, $3 ctx, $2.v) }
+          let t = $3 ctx in
+          TmProj(merge $1 (tmInfo t), t, $2.v) }
   | INL LSQUARE Type RSQUARE ATerm
       { fun ctx ->
-          TmInj($1, $3 ctx, L, $5 ctx) }
+          let t = $5 ctx in
+          TmInj(merge $1 (tmInfo t), ($3 ctx).v, L, t) }
   | INR LSQUARE Type RSQUARE ATerm
       { fun ctx ->
-          TmInj($1, $3 ctx, R, $5 ctx) }
+          let t = $5 ctx in
+          TmInj(merge $1 (tmInfo t), ($3 ctx).v, R, t) }
   | MAGIC LSQUARE Type RSQUARE ATerm
       { fun ctx ->
-          TmMagic($1, $3 ctx, $5 ctx) }
+          let t = $5 ctx in
+          TmMagic(merge $1 (tmInfo t), ($3 ctx).v, t) }
 
 (* Atomic terms are ones that never require extra parentheses *)
 ATerm :
     LPAREN Term RPAREN
       { $2 }
   | LANGLE TermList RANGLE
-      { fun ctx -> TmProd($1 , List.map (fun f -> f ctx) $2) }
+      { fun ctx ->
+        TmProd(merge $1 $3, List.map (fun f -> f ctx) $2) }
   | LCID
       { fun ctx ->
-           TmVar($1.i, name2index $1.i ctx $1.v, ctxlength ctx) }
-
-
-AppType :
-    AppType AType { fun ctx -> TyApp($1 ctx,$2 ctx) }
-  | AType { $1 }
-
+        TmVar($1.i, name2index $1.i ctx $1.v, ctxlength ctx) }
 
 (*   *)

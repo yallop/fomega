@@ -4,11 +4,15 @@ module Error = struct
 
 exception Exit of int
 
-type info = FI of string * int * int | UNKNOWN
+type info = FI of string * int * int * int * int | UNKNOWN
 type 'a withinfo = {i: info; v: 'a}
 
 let dummyinfo = UNKNOWN
-let createInfo f l c = FI(f, l, c)
+let createInfo f ls cs le ce = FI(f, ls, cs, le, ce)
+
+let merge i1 i2 = match i1, i2 with
+  | FI (f, ls, cs, _, _), FI (_, _, _, le, ce) -> FI (f, ls, cs, le, ce)
+  | UNKNOWN, _ | _, UNKNOWN -> UNKNOWN
 
 let errf f =
   print_flush();
@@ -25,13 +29,16 @@ let printInfo =
   (* In the text of the book, file positions in error messages are replaced
      with the string "Error:" *)
   function
-    FI(f,l,c) ->
+    FI(f,ls,cs,le,ce) ->
       if (String.length f <> 0) then begin
         print_string f;
         print_string ":";
       end;
-      print_int l; print_string ".";
-      print_int c; print_string ":"
+      print_int ls; print_string ".";
+      print_int cs; print_string "-";
+      if le <> ls then
+        (print_int le;prerr_string ".");
+      print_int ce; print_string ":"
   | UNKNOWN ->
       print_string "<Unknown file and line>: "
 
@@ -60,5 +67,3 @@ type info = Error.info
 let pr = Format.print_string
 
 end (* module pervasive *)
-
-
