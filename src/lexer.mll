@@ -9,6 +9,9 @@ and start    = ref 0
 and filename = ref ""
 and startLex = ref dummyinfo
 
+(* To handle glyphs *)
+let curr_offset = ref 0
+
 let create inFile stream =
   if not (Filename.is_implicit inFile) then filename := inFile
   else filename := Filename.concat (Sys.getcwd()) inFile;
@@ -18,10 +21,14 @@ let from_string s =
   filename := ""; lineno := 1; start := 0;
   Lexing.from_string s
 
-let newline lexbuf = incr lineno; start := (Lexing.lexeme_start lexbuf)
+let newline lexbuf = incr lineno; curr_offset := 0; start := (Lexing.lexeme_start lexbuf)
 
-let info lexbuf =
-  createInfo (!filename) (!lineno) (Lexing.lexeme_start lexbuf - !start)
+let info ?(offset = 0) lexbuf =
+  let r = !curr_offset - !start in
+  curr_offset := !curr_offset - offset;
+  createInfo (!filename)
+    (!lineno) (Lexing.lexeme_start lexbuf + r)
+    (!lineno) (Lexing.lexeme_end lexbuf + r - offset - 1)
 
 let text = Lexing.lexeme
 
@@ -105,12 +112,18 @@ rule main = parse
   whitespace+                       { main lexbuf }
 | whitespace*("\r")?"\n"            { newline lexbuf; main lexbuf }
 | comment                           { main lexbuf }
-| "->" | "\226\134\146" (* → *)    { Parser.ARROW (info lexbuf) }
-| "=>" | "\226\135\146" (* ⇒ *)    { Parser.DARROW (info lexbuf) }
-| "lambda" | "\206\187" (* λ *)     { Parser.LAMBDA (info lexbuf) }
-| "LAMBDA" | "\206\155" (* Λ *)     { Parser.BIGLAMBDA (info lexbuf) }
-| "All" | "\226\136\128" (* ∀ *)    { Parser.ALL (info lexbuf) }
-| "EXISTS" | "\226\136\131" (* ∃ *) { Parser.EXISTS (info lexbuf) }
+| "->"                              { Parser.ARROW (info lexbuf) }
+| "\226\134\146" (* → *)           { Parser.ARROW (info ~offset:2 lexbuf) }
+| "=>"                              { Parser.DARROW (info lexbuf) }
+| "\226\135\146" (* ⇒ *)           { Parser.DARROW (info ~offset:2 lexbuf) }
+| "lambda"                          { Parser.LAMBDA (info lexbuf) }
+| "\206\187" (* λ *)                { Parser.LAMBDA (info ~offset:1 lexbuf) }
+| "LAMBDA"                          { Parser.BIGLAMBDA (info lexbuf) }
+| "\206\155" (* Λ *)                { Parser.BIGLAMBDA (info ~offset:1 lexbuf) }
+| "All"                             { Parser.ALL (info lexbuf) }
+| "\226\136\128" (* ∀ *)           { Parser.ALL (info ~offset:2 lexbuf) }
+| "EXISTS"                          { Parser.EXISTS (info lexbuf) }
+| "\226\136\131" (* ∃ *)           { Parser.EXISTS (info ~offset:2 lexbuf) }
 | "pack"                            { Parser.PACK (info lexbuf) }
 | "open"                            { Parser.OPEN (info lexbuf) }
 | "case"                            { Parser.CASE (info lexbuf) }
@@ -131,25 +144,26 @@ rule main = parse
 | "("                               { Parser.LPAREN (info lexbuf) }
 | ")"                               { Parser.RPAREN (info lexbuf) }
 | "]"                               { Parser.RSQUARE (info lexbuf) }
-| "<"
-  | "\226\159\168" (* ⟨ *)
-  |"\226\140\169" (* 〈 *)           { Parser.LANGLE (info lexbuf) }
-| ">"
-  | "\226\159\169" (* ⟩ *)
-  | "\226\140\170" (* 〉 *)          { Parser.RANGLE (info lexbuf) }
-| "&" | "\195\151" (* × *)          { Parser.TIMES (info lexbuf) }
+| "<"                               { Parser.LANGLE (info lexbuf) }
+| "\226\159\168" (* ⟨ *)
+| "\226\140\169" (* 〈 *)            { Parser.LANGLE (info ~offset:2 lexbuf) }
+| ">"                               { Parser.RANGLE (info lexbuf) }
+| "\226\159\169" (* ⟩ *)
+| "\226\140\170" (* 〉 *)            { Parser.RANGLE (info ~offset:2 lexbuf) }
+| "&"                               { Parser.TIMES (info lexbuf) }
+| "\195\151" (* × *)                { Parser.TIMES (info ~offset:1 lexbuf) }
 | "+"                               { Parser.PLUS (info lexbuf) }
 | "|"                               { Parser.VBAR (info lexbuf) }
 | "@"                               { Parser.AT (info lexbuf) }
-| "\207\128" (* π *)                { Parser.PI (info lexbuf) }
+| "\207\128" (* π *)                { Parser.PI (info ~offset:1 lexbuf) }
 | lident as id                      { Parser.LCID {i=info lexbuf;v=id} }
 | uident as id                      { Parser.UCID {i=info lexbuf;v=id} }
-| lcgreek as id                   { Parser.UCID {i=info lexbuf;v=id} }
+| lcgreek as id                     { Parser.UCID {i=info ~offset:(String.length id / 2) lexbuf;v=id} }
 | index as idx                      { Parser.INDEX
                                         {i=info lexbuf;
                                          v=int_of_string idx} }
 | subindex as idx                   { Parser.SUBINDEX
-                                        {i=info lexbuf;
+                                        {i=info ~offset:(String.length idx / 3) lexbuf;
                                          v=int_of_subdigit_string idx} }
 | eof                               { Parser.EOF(info lexbuf) }
 | _ as c                            { error (info lexbuf)

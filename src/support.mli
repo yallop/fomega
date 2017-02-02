@@ -26,8 +26,9 @@ module Error : sig
   type info
   val dummyinfo : info
 
-  (* Create file position info: filename lineno column *)
-  val createInfo : string -> int -> int -> info
+  (* Create file position info: filename line(start) column(start) line(end) column(end)  *)
+  val createInfo : string -> int -> int -> int -> int -> info
+  val merge : info -> info -> info
   val printInfo : info -> unit
 
   (* A convenient datatype for a "value with file info."  Used in
@@ -50,5 +51,3 @@ module Error : sig
   val warning : string -> unit
   val warningAt : info -> string -> unit
 end
-
-
