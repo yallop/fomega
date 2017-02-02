@@ -252,8 +252,22 @@ let rec typeof ctx t =
       (match simplifyty ctx tyT1 with
           TyArr(tyT11,tyT12) ->
             if tyeqv ctx tyT2 tyT11 then tyT12
-            else error fi "parameter type mismatch"
-        | _ -> error fi "arrow type expected")
+            else
+              errfAt (tmInfo t2) (fun () ->
+                  pr "Parameter type mismatch:";
+                  force_newline ();
+                  pr "This term has type ";
+                  printty ctx tyT2;
+                  pr " instead of ";
+                  printty ctx tyT11;
+                  force_newline ())
+       | _ -> errfAt (tmInfo t1) (fun () ->
+           pr "Arrow type expected:";
+           force_newline ();
+           printty ctx tyT1;
+           pr " is not an arrow type, it cannot be applied.";
+           force_newline ())
+      )
   | TmTAbs(fi,tyX,knK1,t2) ->
       let ctx = addbinding ctx tyX (TyVarBind(knK1)) in
       let tyT2 = typeof ctx t2 in
@@ -264,17 +278,17 @@ let rec typeof ctx t =
       (match simplifyty ctx tyT1 with
            TyAll(_,knK11,tyT12) ->
              if knK11 <> knKT2 then
-               error fi "type argument has wrong kind";
+               error fi "Type argument has wrong kind";
              typeSubstTop tyT2 tyT12
-         | _ -> error fi "universal type expected")
+         | _ -> error fi "Universal type expected")
   | TmPac(fi,ty1,tm,x,k,ty2) ->
       let knTy1 = kindof ctx ty1 in
       let tyTm = typeof ctx tm in
       if knTy1 <> k then
-        error fi "pack kind mismatch";
+        error fi "Pack kind mismatch";
       let subst = typeSubstTop ty1 ty2 in
       if not (tyeqv ctx subst tyTm) then
-        error fi "pack type mismatch"
+        error fi "Pack type mismatch"
       else
         TyExi (x, k, ty2)
   | TmOpe(fi,t1,x,y,t2) ->
@@ -284,7 +298,7 @@ let rec typeof ctx t =
            let ctx = addbinding ctx x (TyVarBind kn) in
            let ctx = addbinding ctx y (VarBind t3) in
            typeShift (-2) (typeof ctx t2)
-       | _ -> error fi "existential type expected")
+       | _ -> error fi "Existential type expected")
   | TmProd(fi, tms) ->
       let tys = List.map (typeof ctx) tms in
       TyProd(tys)
@@ -293,8 +307,8 @@ let rec typeof ctx t =
           TyProd(tys) ->
             if i <= List.length tys then
               List.nth tys (i-1)
-            else error fi ("element "^(string_of_int i)^" not found")
-        | _ -> error fi "product type expected")
+            else error fi ("Element "^(string_of_int i)^" not found")
+        | _ -> error fi "Product type expected")
   | TmCase(fi,tm1,x,tm2,y,tm3) ->
       (match simplifyty ctx (typeof ctx tm1) with
           TySum(tyL,tyR) ->
@@ -306,9 +320,9 @@ let rec typeof ctx t =
              typeShift (-1) (typeof ctx' tm3)
            in
            if not (tyeqv ctx ltype rtype)
-           then error fi "branches do not have the same type"
+           then error fi "Branches do not have the same type"
            else ltype
-        | _ -> error fi "variant type expected")
+        | _ -> error fi "Variant type expected")
   | TmInj(fi,ty,L,t) ->
     TySum(simplifyty ctx (typeof ctx t),
           simplifyty ctx ty)
