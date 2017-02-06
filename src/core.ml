@@ -363,7 +363,7 @@ let rec prettify t = match t with
   | TmCase(fi, t1, s1, t2, s2, t3) ->
       TmCase(fi, prettify t1, s1, prettify t2, s2, prettify t3)
   | TmInj(fi, ty, inj, term) ->
-      TmInj(fi, prettifyty ty, inj, term)
+    TmInj(fi, prettifyty ty, inj, term)
 
 let prettifybinding bind = match bind with
   | NameBind -> bind

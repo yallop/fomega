@@ -75,4 +75,3 @@ val prbinding : context -> binding -> unit
 
 (* Misc *)
 val tmInfo: term -> info
-

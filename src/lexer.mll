@@ -69,7 +69,7 @@ let whitespace = [' ' '	']
 let idchar =  ['A'-'Z' 'a'-'z' '_' '0'-'9' '\'']
 let lident = ['a'-'z' '_'] idchar*
 let uident = ['A'-'Z'] idchar*
-let lcgreek = 
+let lcgreek =
     "\206\177" (* α *)
   | "\206\178" (* β *)
   | "\206\179" (* γ *)
