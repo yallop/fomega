@@ -16,7 +16,6 @@ let rec isconst ctx t = match t with
   | TmCase(_, c1, _, c2, _, c3) ->
       isconst ctx c1 && isconst ctx c2 && isconst ctx c3
   | TmVar(fi,x,_) -> isconstbinding fi ctx x
-  | TmMagic(fi, _, c) -> isconst ctx c
   | _ -> false
 
 and isconstbinding fi ctx x =
@@ -31,7 +30,6 @@ let rec isval ctx t = match t with
   | TmPac(_,_,v1,_,_,_) when isval ctx v1 -> true
   | TmInj(_, _, _, v) when isval ctx v -> true
   | TmVar(fi, x, _) when isvalbinding fi ctx x -> true
-  | TmMagic(fi, _, tm) when isval ctx tm -> true
   | t -> isconst ctx t
 
 and isvalbinding fi ctx x =
@@ -120,7 +118,6 @@ let rec eval1 ctx t = match t with
       | VarDef(t,_) -> t
       | _ -> raise NoRuleApplies
     end
-  | TmMagic(_, _, t) -> t
   | _ ->
       raise NoRuleApplies
 
@@ -329,7 +326,6 @@ let rec typeof ctx t =
   | TmInj(fi,ty,R,t) ->
     TySum(simplifyty ctx ty,
           simplifyty ctx (typeof ctx t))
-  | TmMagic(fi,ty,tm) -> simplifyty ctx ty
 
 (* -------------------- Prettyfy -------------------------- *)
 
@@ -368,8 +364,6 @@ let rec prettify t = match t with
       TmCase(fi, prettify t1, s1, prettify t2, s2, prettify t3)
   | TmInj(fi, ty, inj, term) ->
     TmInj(fi, prettifyty ty, inj, term)
-  | TmMagic(fi, ty, tm) ->
-    TmMagic(fi, prettifyty ty, prettify tm)
 
 let prettifybinding bind = match bind with
   | NameBind -> bind

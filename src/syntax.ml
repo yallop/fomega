@@ -33,7 +33,6 @@ type term =
   | TmProj of info * term * int
   | TmCase of info * term * string * term * string * term
   | TmInj of info * ty * inj * term
-  | TmMagic of info * ty * term
 
 type binding =
     NameBind
@@ -119,7 +118,6 @@ let tmmap onvar ontype c t =
   | TmCase(fi,tm1,x,tm2,y,tm3) ->
     TmCase(fi,walk c tm1,x,walk (c+1) tm2,y,walk (c+1) tm3)
   | TmInj(fi,ty,i,tm) -> TmInj (fi,ontype c ty,i,walk c tm)
-  | TmMagic(fi,ty,tm) -> TmMagic(fi,ontype c ty, walk c tm)
   in walk c t
 
 let typeShiftAbove d c tyT =
@@ -231,7 +229,6 @@ let tmInfo t = match t with
   | TmProj(fi,_,_) -> fi
   | TmCase(fi,_,_,_,_,_) -> fi
   | TmInj(fi,_,_,_) -> fi
-  | TmMagic(fi,_,_) -> fi
 
 (* ---------------------------------------------------------------------- *)
 (* Printing *)

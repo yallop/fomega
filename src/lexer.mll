@@ -132,7 +132,6 @@ rule main = parse
 | "as"                              { Parser.AS (info lexbuf) }
 | "in"                              { Parser.IN (info lexbuf) }
 | "of"                              { Parser.OF (info lexbuf) }
-| "magic"                           { Parser.MAGIC (info lexbuf) }
 | "_"                               { Parser.USCORE (info lexbuf) }
 | "="                               { Parser.EQ (info lexbuf) }
 | ","                               { Parser.COMMA (info lexbuf) }

@@ -34,7 +34,6 @@ open Syntax
 %token <Support.Error.info> OF
 %token <Support.Error.info> AS
 %token <Support.Error.info> IN
-%token <Support.Error.info> MAGIC
 
 (* Identifier and constant value tokens *)
 %token <string Support.Error.withinfo> UCID  (* uppercase-initial *)
@@ -307,10 +306,6 @@ AppTerm :
       { fun ctx ->
           let t = $5 ctx in
           TmInj(merge $1 (tmInfo t), ($3 ctx).v, R, t) }
-  | MAGIC LSQUARE Type RSQUARE ATerm
-      { fun ctx ->
-          let t = $5 ctx in
-          TmMagic(merge $1 (tmInfo t), ($3 ctx).v, t) }
 
 (* Atomic terms are ones that never require extra parentheses *)
 ATerm :
