@@ -254,9 +254,9 @@ let rec typeof ctx t =
                   pr "Parameter type mismatch:";
                   force_newline ();
                   pr "This term has type ";
-                  printty ctx tyT2;
+                  printty ctx (simplifyty ctx tyT2);
                   pr " instead of ";
-                  printty ctx tyT11;
+                  printty ctx (simplifyty ctx tyT11);
                   force_newline ())
        | _ -> errfAt (tmInfo t1) (fun () ->
            pr "Arrow type expected:";
