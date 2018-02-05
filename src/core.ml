@@ -331,6 +331,53 @@ let rec typeof ctx t =
 
 (* Simplify type applications within expressions for better printing *)
 
+let ap1 g x f =
+  match g x with
+  | None -> None
+  | Some x -> Some (f x)
+let ap2 g x y f =
+  match g x, g y with
+  | None, None -> None
+  | Some x, None -> Some (f x y)
+  | None, Some y -> Some (f x y)
+  | Some x, Some y -> Some (f x y)
+let apn g xs f =
+  let one x (xs,changed) =
+    match g x with
+      None -> (x :: xs), changed
+    | Some x -> (x :: xs), true
+  in
+  (* Return a list*bool pair: mapped elements, whether anything changed *)
+  match List.fold_right one xs ([], false) with
+    _, false -> None
+  | xs, true -> Some (f xs)
+
+let rec prettifyty' tyT = match tyT with
+  | TyApp(TyAbs(_,_,tyT12),tyT2) -> Some (typeSubstTop tyT2 tyT12)
+  | TyVar _ -> None
+  | TyArr(ty1, ty2) ->
+    ap2 prettifyty' ty1 ty2
+      (fun ty1 ty2 -> TyArr(ty1, ty2))
+  | TyAll(s, k, ty) -> 
+    ap1 prettifyty' ty (fun ty -> TyAll(s, k, ty))
+  | TyExi(s, k, ty) ->
+    ap1 prettifyty' ty (fun ty -> TyExi(s, k, ty))
+  | TyAbs(s, k, ty) ->
+    ap1 prettifyty' ty (fun ty -> TyAbs(s, k, ty))
+  | TyApp(ty1, ty2) -> 
+    ap2 prettifyty' ty1 ty2 (fun ty1 ty2 -> TyApp(ty1, ty2))
+  | TyProd tyl ->
+    apn prettifyty' tyl (fun tyl -> TyProd tyl)
+
+  | TySum(ty1, ty2) ->
+    ap2 prettifyty' ty1 ty2 (fun ty1 ty2 -> TySum(ty1, ty2))
+
+let rec prettifyty tyT =
+  match prettifyty' tyT with
+    None -> tyT
+  | Some tyT -> prettifyty tyT
+
+(*
 let rec prettifyty tyT = match tyT with
   | TyApp(TyAbs(_,_,tyT12),tyT2) -> typeSubstTop tyT2 tyT12
   | TyVar _ -> tyT
@@ -341,6 +388,7 @@ let rec prettifyty tyT = match tyT with
   | TyApp(ty1, ty2) -> TyApp(prettifyty ty1, prettifyty ty2)
   | TyProd tyl -> TyProd (List.map prettifyty tyl)
   | TySum(ty1, ty2) -> TySum(prettifyty ty1, prettifyty ty2)
+*)
 
 let rec prettify t = match t with
   | TmVar _ -> t
