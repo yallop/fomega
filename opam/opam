@@ -1,4 +1,4 @@
-opam-version: "1.2"
+opam-version: "2.0"
 name: "fomega"
 version: "0.1"
 homepage: "https://github.com/ocamllabs/fomega"
@@ -8,3 +8,12 @@ depends: [
 build: [
   [make "all"]
 ]
+maintainer: "yallop@gmail.com"
+authors: ["Benjamin Pierce" "Leo White" "Jeremy Yallop"]
+bug-reports: "https://github.com/ocamllabs/fomega/issues"
+synopsis: "System Fω interpreter"
+extra-files: ["fomega.install" "md5=b3800be852537c753dc64cc8ef5e5d40"]
+url {
+  src: "https://github.com/ocamllabs/fomega/archive/0.1.tar.gz"
+  checksum: "md5=238e37c06fc3a17447d88b739ac2bd36"
+}
