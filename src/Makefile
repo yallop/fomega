@@ -13,7 +13,7 @@
 #                  existing modules.  (The graph is stored in the file
 #                  .depend)
 
-YACC = menhir --explain --strict --graph
+YACC = menhir --explain --strict --reference-graph
 
 # These are the object files needed to rebuild the main executable file
 #
