@@ -3,8 +3,8 @@
  (modules core lexer parser process support syntax))
 
 (executable
- (public_name main)
- (modules main)
+ (public_name fomega)
+ (modules fomega)
  (libraries fomega))
 
 (executable

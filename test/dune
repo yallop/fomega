@@ -1,0 +1,14 @@
+(cram
+ (deps
+  %{bin:fomega}
+  ../examples/bools.f
+  ../examples/bools_via_sums.f
+  ../examples/bools_with_existentials.f
+  ../examples/equality.f
+  ../examples/hoas.f
+  ../examples/lists.f
+  ../examples/nats.f
+  ../examples/nested_types.f
+  ../examples/pairs.f
+  ../examples/simply-typed.f
+  ../examples/sums.f))

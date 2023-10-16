@@ -2,6 +2,8 @@
 
 (using menhir 2.1)
 
+(cram enable)
+
 (authors
   "Benjamin Pierce" "Leo White" "Jeremy Yallop")
 
