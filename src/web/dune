@@ -1,5 +1,5 @@
 (rule
-  (deps ../jsmain.bc.js)
-  (target jsmain.js)
-  (action
-    (run cp %{deps} %{target})))
+ (deps ../jsmain.bc.js)
+ (target jsmain.js)
+ (action
+  (run cp %{deps} %{target})))

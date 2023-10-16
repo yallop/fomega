@@ -1,3 +1,3 @@
 open Syntax
 
-val process_file: command list -> context -> context
+val process_file : command list -> context -> context
