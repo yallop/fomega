@@ -161,7 +161,7 @@ let bindingshift d bind =
 let termSubst j s t =
   tmmap
     (fun fi j x n -> if x=j then termShift j s else TmVar(fi,x,n))
-    (fun j tyT -> tyT)
+    (fun _j tyT -> tyT)
     j t
 
 let termSubstTop s t =
@@ -175,8 +175,8 @@ let typeSubst tyS j tyT =
 let typeSubstTop tyS tyT =
   typeShift (-1) (typeSubst (typeShift 1 tyS) 0 tyT)
 
-let rec tytermSubst tyS j t =
-  tmmap (fun fi c x n -> TmVar(fi,x,n))
+let tytermSubst tyS j t =
+  tmmap (fun fi _c x n -> TmVar(fi,x,n))
         (fun j tyT -> typeSubst tyS j tyT) j t
 
 let tytermSubstTop tyS t =
@@ -185,7 +185,7 @@ let tytermSubstTop tyS t =
 (* ---------------------------------------------------------------------- *)
 (* Context management (continued) *)
 
-let rec getbinding fi ctx i =
+let getbinding fi ctx i =
   try
     let (_,bind) = nthbinding ctx i in
     bindingshift (i+1) bind
@@ -397,21 +397,21 @@ and printty_AType outer ctx tyT = match tyT with
 let printty ctx tyT = printty_Type true ctx tyT
 
 let rec printtm_Term outer ctx t = match t with
-    TmAbs(fi,x,tyT1,t2) ->
+    TmAbs(_fi,x,tyT1,t2) ->
       (let (ctx',x') = (pickfreshname ctx x) in
          obox(); pr lambda_glyph;
          pr x'; pr ":"; printty_Type false ctx tyT1; pr ".";
          if (small t2) && not outer then break();
          printtm_Term outer ctx' t2;
          cbox())
-  | TmCase(fi,t,x,t1,y,t2) ->
+  | TmCase(_fi,t,x,t1,y,t2) ->
       obox0();
       pr "case ";
       printtm_Term false ctx t;
       pr " of "; pr x; printtm_Term false ctx t1;
       pr " | ";  pr y; printtm_Term false ctx t2;
       cbox();
-  | TmTAbs(fi,x,knK,t) ->
+  | TmTAbs(_fi,x,knK,t) ->
       (let (ctx1,x) = (pickfreshname ctx x) in
             obox(); pr biglambda_glyph; pr x;
             prokn ctx knK;
@@ -419,7 +419,7 @@ let rec printtm_Term outer ctx t = match t with
             if (small t) && not outer then break();
             printtm_Term outer ctx1 t;
             cbox())
-  | TmPac(fi,ty1,tm,x,k,ty2) ->
+  | TmPac(_fi,ty1,tm,x,k,ty2) ->
       obox (); pr "pack ";
       obox ();
       printty_Type false ctx ty1; pr ",";
@@ -429,7 +429,7 @@ let rec printtm_Term outer ctx t = match t with
       pr " as ";
       printty_Type false ctx (TyExi (x,k,ty2));
       cbox ()
-  | TmOpe(fi,t1,x,y,t2) ->
+  | TmOpe(_fi,t1,x,y,t2) ->
     (let (ctx1,x) = (pickfreshname ctx x) in
      let (ctx2,y) = (pickfreshname ctx1 y) in
       obox (); pr "open ";
@@ -443,26 +443,26 @@ let rec printtm_Term outer ctx t = match t with
   | t -> printtm_AppTerm outer ctx t
 
 and printtm_AppTerm outer ctx t = match t with
-    TmApp(fi, t1, t2) ->
+    TmApp(_fi, t1, t2) ->
       obox0();
       printtm_AppTerm false ctx t1;
       print_space();
       printtm_ATerm false ctx t2;
       cbox()
-  | TmTApp(fi,t,tyS) ->
+  | TmTApp(_fi,t,tyS) ->
       obox0();
       printtm_AppTerm false ctx t;
       print_space();
       pr "["; printty_Type false ctx tyS; pr "]";
       cbox()
-  | TmProj(fi, t1, i) ->
+  | TmProj(_fi, t1, i) ->
       obox0();
       pr pi_glyph;
       pr (index_glyph i);
       print_space();
       printtm_ATerm false ctx t1;
       cbox()
-  | TmInj(fi, ty, i, tm) ->
+  | TmInj(_fi, ty, i, tm) ->
       obox0();
       pr (match i with L -> "inl" | R -> "inr");
       print_space();
@@ -481,7 +481,7 @@ and printtm_ATerm outer ctx t = match t with
             ^ " in {"
             ^ (List.fold_left (fun s (x,_) -> s ^ " " ^ x) "" ctx)
             ^ " }]")
-  | TmProd(fi, tms) ->
+  | TmProd(_fi, tms) ->
       let rec loop l = match l with
           [] -> ()
         | [tm] -> printtm_Term false ctx tm
@@ -510,7 +510,7 @@ let prbinding ctx b = match b with
     NameBind -> ()
   | TyVarBind knK -> pr ":: "; printkn ctx knK
   | VarBind tyT -> pr ": "; printty ctx tyT
-  | TyVarDef(tyT, None) -> ()
-  | TyVarDef(tyT, Some knK) -> pr ":: "; printkn ctx knK
-  | VarDef(t, None) -> ()
-  | VarDef(t, Some tyT) -> pr ": "; printty ctx tyT
+  | TyVarDef(_tyT, None) -> ()
+  | TyVarDef(_tyT, Some knK) -> pr ":: "; printkn ctx knK
+  | VarDef(_t, None) -> ()
+  | VarDef(_t, Some tyT) -> pr ": "; printty ctx tyT

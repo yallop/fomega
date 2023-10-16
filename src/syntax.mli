@@ -1,6 +1,5 @@
 (* module Syntax: syntax trees and associated support functions *)
 
-open Support.Pervasive
 open Support.Error
 
 (* Data type definitions *)
@@ -75,4 +74,3 @@ val prbinding : context -> binding -> unit
 
 (* Misc *)
 val tmInfo: term -> info
-

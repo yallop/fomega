@@ -1,6 +1,8 @@
 open Format
+open Fomega
 open Support.Error
 open Syntax
+open Js_of_ocaml
 
 let output_buffer = Buffer.create 100
 

@@ -66,3 +66,7 @@ Terms are defined as follows:
             ( term )
              
 ASCII alternatives: `lambda` for `λ`, `LAMBDA` for `Λ`.  Kind annotations (`:: kind`) can be omitted, and default to `*`.
+
+## Web version
+
+You can run the web version by using: `dune exec src/runweb.exe`.

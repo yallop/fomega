@@ -48,9 +48,9 @@ let rec expand ctx t = match t with
 exception NoRuleApplies
 
 let rec eval1 ctx t = match t with
-  | TmApp(fi,v1 ,v2) when isval ctx v1 && isval ctx v2 -> begin
+  | TmApp(_fi,v1 ,v2) when isval ctx v1 && isval ctx v2 -> begin
       match expand ctx v1 with
-      | TmAbs(_,x,tyT11,t12) -> termSubstTop v2 t12
+      | TmAbs(_,_x,_tyT11,t12) -> termSubstTop v2 t12
       | _ -> raise NoRuleApplies
     end
   | TmApp(fi,v1,t2) when isval ctx v1 ->
@@ -59,9 +59,9 @@ let rec eval1 ctx t = match t with
   | TmApp(fi,t1,t2) ->
       let t1' = eval1 ctx t1 in
       TmApp(fi, t1', t2)
-  | TmTApp(fi,v1,tyT2) when isval ctx v1-> begin
+  | TmTApp(_fi,v1,tyT2) when isval ctx v1-> begin
       match expand ctx v1 with
-      | TmTAbs(_,x,_,t11) -> tytermSubstTop tyT2 t11
+      | TmTAbs(_,_x,_,t11) -> tytermSubstTop tyT2 t11
       | _ -> raise NoRuleApplies
     end
   | TmTApp(fi,t1,tyT2) ->
@@ -70,7 +70,7 @@ let rec eval1 ctx t = match t with
   | TmPac(fi, ty1, tm, x, knd, ty2) ->
     let tm' = eval1 ctx tm in
     TmPac(fi, ty1, tm', x, knd, ty2)
-  | TmOpe (fi,v1, _, _, t2) when isval ctx v1 -> begin
+  | TmOpe (_fi,v1, _, _, t2) when isval ctx v1 -> begin
       match expand ctx v1 with
       | TmPac(_, tyT11, v12, _, _, _) ->
           tytermSubstTop tyT11 (termSubstTop (termShift 1 v12) t2)
@@ -91,7 +91,7 @@ let rec eval1 ctx t = match t with
       in
       let tms' = loop tms in
         TmProd(fi, tms')
-  | TmProj(fi, v1, i) when isval ctx v1 -> begin
+  | TmProj(_fi, v1, i) when isval ctx v1 -> begin
       match expand ctx v1 with
       | TmProd(_, tms) when i <= List.length tms -> List.nth tms (i-1)
       | _ -> raise NoRuleApplies
@@ -99,7 +99,7 @@ let rec eval1 ctx t = match t with
   | TmProj(fi, t1, l) ->
       let t1' = eval1 ctx t1 in
       TmProj(fi, t1', l)
-  | TmCase(fi, v1, x, tm1, y, tm2) when isval ctx v1 -> begin
+  | TmCase(_fi, v1, _x, tm1, _y, tm2) when isval ctx v1 -> begin
       match expand ctx v1 with
       | TmInj(_, _, L, v) -> termSubstTop v tm1
       | TmInj(_, _, R, v) -> termSubstTop v tm2
@@ -130,7 +130,7 @@ let rec eval ctx t =
 
 let istydefined ctx i =
   match getbinding dummyinfo ctx i with
-  | TyVarDef(tyT, _) -> true
+  | TyVarDef(_tyT, _) -> true
   | _ -> false
 
 let gettydef ctx i =
@@ -154,7 +154,7 @@ let rec simplifyty ctx tyT =
     simplifyty ctx tyT'
   with NoRuleApplies -> tyT
 
-let kindeqv ctx knK knK' = (knK = knK')
+let kindeqv _ctx knK knK' = (knK = knK')
 
 let rec tyeqv ctx tyS tyT =
   let tyS = simplifyty ctx tyS in
@@ -243,7 +243,7 @@ let rec typeof ctx t =
       let ctx' = addbinding ctx x (VarBind(tyT1)) in
       let tyT2 = typeof ctx' t2 in
       TyArr(tyT1, typeShift (-1) tyT2)
-  | TmApp(fi,t1,t2) ->
+  | TmApp(_fi,t1,t2) ->
       let tyT1 = typeof ctx t1 in
       let tyT2 = typeof ctx t2 in
       (match simplifyty ctx tyT1 with
@@ -265,7 +265,7 @@ let rec typeof ctx t =
            pr " is not an arrow type, it cannot be applied.";
            force_newline ())
       )
-  | TmTAbs(fi,tyX,knK1,t2) ->
+  | TmTAbs(_fi,tyX,knK1,t2) ->
       let ctx = addbinding ctx tyX (TyVarBind(knK1)) in
       let tyT2 = typeof ctx t2 in
       TyAll(tyX,knK1,tyT2)
@@ -296,7 +296,7 @@ let rec typeof ctx t =
            let ctx = addbinding ctx y (VarBind t3) in
            typeShift (-2) (typeof ctx t2)
        | _ -> error fi "Existential type expected")
-  | TmProd(fi, tms) ->
+  | TmProd(_fi, tms) ->
       let tys = List.map (typeof ctx) tms in
       TyProd(tys)
   | TmProj(fi, t1, i) ->
@@ -320,10 +320,10 @@ let rec typeof ctx t =
            then error fi "Branches do not have the same type"
            else ltype
         | _ -> error fi "Variant type expected")
-  | TmInj(fi,ty,L,t) ->
+  | TmInj(_fi,ty,L,t) ->
     TySum(simplifyty ctx (typeof ctx t),
           simplifyty ctx ty)
-  | TmInj(fi,ty,R,t) ->
+  | TmInj(_fi,ty,R,t) ->
     TySum(simplifyty ctx ty,
           simplifyty ctx (typeof ctx t))
 
@@ -358,13 +358,13 @@ let rec prettifyty' tyT = match tyT with
   | TyArr(ty1, ty2) ->
     ap2 prettifyty' ty1 ty2
       (fun ty1 ty2 -> TyArr(ty1, ty2))
-  | TyAll(s, k, ty) -> 
+  | TyAll(s, k, ty) ->
     ap1 prettifyty' ty (fun ty -> TyAll(s, k, ty))
   | TyExi(s, k, ty) ->
     ap1 prettifyty' ty (fun ty -> TyExi(s, k, ty))
   | TyAbs(s, k, ty) ->
     ap1 prettifyty' ty (fun ty -> TyAbs(s, k, ty))
-  | TyApp(ty1, ty2) -> 
+  | TyApp(ty1, ty2) ->
     ap2 prettifyty' ty1 ty2 (fun ty1 ty2 -> TyApp(ty1, ty2))
   | TyProd tyl ->
     apn prettifyty' tyl (fun tyl -> TyProd tyl)
@@ -425,8 +425,8 @@ let prettifybinding bind = match bind with
 
 let checkbinding fi ctx b = match b with
   | NameBind -> NameBind
-  | TyVarBind knK -> b
-  | VarBind tyT -> b
+  | TyVarBind _knK -> b
+  | VarBind _tyT -> b
   | TyVarDef(tyT, None) -> TyVarDef(tyT, Some (kindof ctx tyT))
   | TyVarDef(tyT, Some knK) ->
       let knK' = kindof ctx tyT in
@@ -446,7 +446,7 @@ let evalbinding ctx b = match b with
 
 (* -------------------- Top-level open --------------------- *)
 
-let rec typeopen fi ctx t =
+let typeopen fi ctx t =
   let tyT = typeof ctx t in
     match simplifyty ctx tyT with
     | TyExi(_,kn,ty) -> kn, ty

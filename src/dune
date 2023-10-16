@@ -1,0 +1,32 @@
+(library
+  (public_name fomega)
+         (modules core lexer parser process support syntax))
+
+(executable
+  (public_name main)
+  (modules main)
+  (libraries fomega))
+
+(executable
+  (name jsmain)
+  (modes js)
+  (modules jsmain)
+  (libraries fomega js_of_ocaml))
+
+(executable
+  (name runweb)
+  (modules runweb content)
+  (libraries tiny_httpd))
+
+(rule (target content.ml)
+  (deps
+    (file web/index.html)
+    (file web/columns.css)
+    (file web/jsmain.js))
+  (action (with-stdout-to %{null} (run ocaml-crunch -m plain web -o %{target}))))
+
+(ocamllex
+  (modules lexer))
+
+(menhir
+  (modules parser))

@@ -5,7 +5,6 @@
 
 %{
 open Support.Error
-open Support.Pervasive
 open Syntax
 %}
 
@@ -134,12 +133,12 @@ ArrowKind :
            { $1 }
 
 AKind :
-    STAR { fun ctx -> KnStar }
+    STAR { fun _ctx -> KnStar }
   | LPAREN Kind RPAREN  { $2 }
 
 OKind :
   (* empty *)
-     { fun ctx -> KnStar}
+     { fun _ctx -> KnStar}
 | COLONCOLON Kind
      { $2 }
 
@@ -226,7 +225,7 @@ AppType :
 
 TyBinder :
   | (* empty *)
-      { fun ctx -> TyVarBind(KnStar) }
+      { fun _ctx -> TyVarBind(KnStar) }
   | COLONCOLON Kind
       { fun ctx -> TyVarBind($2 ctx) }
   | COLONCOLON Kind EQ Type

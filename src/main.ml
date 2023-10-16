@@ -6,10 +6,9 @@
 *)
 
 open Format
-open Support.Pervasive
+open Fomega
 open Support.Error
 open Syntax
-open Core
 
 let searchpath = ref [""]
 
@@ -33,7 +32,7 @@ let openfile infile =
       | (d::rest) ->
           let name = if d = "" then infile else (d ^ "/" ^ infile) in
           try name, open_in name
-            with Sys_error m -> trynext rest
+            with Sys_error _m -> trynext rest
   in trynext !searchpath
 
 let parseFile inFile (files, ctx) =
@@ -59,9 +58,7 @@ let main () =
 let () = set_max_boxes 1000
 let () = set_margin 67
 let res =
-  Printexc.catch (fun () ->
     try main();0
-    with Exit x -> x)
-  ()
+    with Exit x -> x
 let () = print_flush()
 let () = exit res
