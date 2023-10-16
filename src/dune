@@ -3,11 +3,6 @@
  (modules core lexer parser process support syntax))
 
 (executable
- (public_name fomega)
- (modules fomega)
- (libraries fomega))
-
-(executable
  (name jsmain)
  (modes js)
  (modules jsmain)
