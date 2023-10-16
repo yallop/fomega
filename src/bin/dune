@@ -1,0 +1,4 @@
+(executable
+ (public_name fomega)
+ (modules fomega)
+ (libraries fomega))
